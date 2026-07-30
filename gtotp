@@ -1,0 +1,223 @@
+#!/usr/bin/python3
+import gi
+
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gtk", "4.0")
+from gi.repository import Gtk, GLib, Gdk
+import subprocess
+import time
+
+
+class TOTPApp(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id="org.example.totpapp")
+        self.code_update_timer = None
+        self.countdown_timer = None
+        self.overlay = None
+
+    def update_codes(self):
+        # Clear existing timers
+        if self.code_update_timer:
+            GLib.source_remove(self.code_update_timer)
+            self.code_update_timer = None
+        if self.countdown_timer:
+            GLib.source_remove(self.countdown_timer)
+            self.countdown_timer = None
+
+        self.fetch_entries()
+
+        # Calculate initial timeout value
+        current_time = time.time()
+        next_interval = 30 - int(current_time % 30)
+
+        self.code_update_timer = GLib.timeout_add_seconds(
+            next_interval, self.update_codes
+        )
+
+        # Update countdown every second
+        self.countdown_timer = GLib.timeout_add_seconds(1, self.update_countdown)
+
+    def on_button_press_event(self, gesture, n_press, x, y):
+        if n_press == 1:
+            # Get the column at the event coordinates
+            path = self.treeview.get_path_at_pos(x, y)
+            if path is not None:
+                column_index = self.treeview.get_columns().index(path[1])
+                # Get the value of the cell at the clicked path
+                value = self.liststore[path[0].get_indices()[0] - 1][column_index]
+                clipboard = Gdk.Display.get_default().get_clipboard()
+                clipboard.set(value)
+                self.show_overlay("Copied", 3)
+
+    def show_overlay(self, message, duration):
+        # Add overlay label to overlay
+        self.overlay.add_overlay(self.overlay_label)
+
+        def remove_overlay():
+            # Remove overlay label from overlay
+            self.overlay.remove_overlay(self.overlay_label)
+            return False
+
+        GLib.timeout_add_seconds(duration, remove_overlay)
+
+    def do_activate(self):
+        if self.overlay is None:
+            # Create the overlay
+            self.overlay = Gtk.Overlay()
+            self.overlay.set_vexpand(True)
+            self.overlay.set_hexpand(True)
+
+            # Add the overlay to the window
+            self.window = Gtk.ApplicationWindow(application=self)
+            self.window.set_title("TOTP App")
+            self.window.set_default_size(500, 300)
+            self.window.connect("destroy", self.on_destroy)
+            self.window.set_child(self.overlay)
+
+            # Create a label for the overlay with transparent background and bold text
+            self.overlay_label = Gtk.Label(label="Copied")
+            self.overlay_label.set_name(
+                "overlay-label"
+            )  # Set a custom name for styling
+            self.overlay_label.set_markup(
+                '<span font_desc="32" weight="bold">Copied</span>'
+            )
+
+            # Add the overlay label to the overlay
+            self.overlay.add_overlay(self.overlay_label)
+
+        # Create a list store to store TOTP entries
+        self.liststore = Gtk.ListStore(
+            str, str, str, str, str
+        )  # Added one more column for countdown
+
+        # Create a treeview to display the TOTP entries
+        self.treeview = Gtk.TreeView(model=self.liststore)
+
+        # Create a gesture recognizer for right-click
+        self.gesture = Gtk.GestureClick.new()
+        # Connect the "released" signal to the on_button_press_event function
+        self.gesture.connect("released", self.on_button_press_event)
+        # Set the button for the gesture recognizer to right-click (button 3)
+        self.gesture.set_button(1)
+        # Add the gesture recognizer to the TreeView
+        self.treeview.add_controller(self.gesture)
+
+        # Add columns to the treeview
+        for i, column_title in enumerate(
+            ["Service", "Username", "Current Code", "Next Code", "Countdown"]
+        ):  # Added "Countdown"
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(column_title, renderer, text=i)
+            self.treeview.insert_column(column, i)
+
+        # Fetch and display TOTP entries
+        self.update_codes()
+
+        # Add treeview to overlay
+        self.overlay.add_overlay(self.treeview)
+
+        self.window.present()
+
+    def generate_totp(self, entry):
+        # Extract service, username, digits, and secret from the entry
+        entry_info = entry[len("otpauth://totp/") :]  # Strip off "otpauth://totp/"
+        entry_parts = entry_info.split("?", 1)
+
+        parameters = {}
+        if len(entry_parts) > 1:
+            query_params = entry_parts[1].split("&")
+            for param in query_params:
+                key, value = param.split("=")
+                parameters[key] = value
+
+        digits = parameters.get("digits", "6")
+        secret = parameters.get("secret", "")
+
+        # Generate TOTP codes using oathtool
+        current_code, next_code = self.call_oathtool(secret, digits)
+
+        return current_code, next_code
+
+    def call_oathtool(self, secret, digits):
+        # Generate HOTP using oathtool for current time and next time
+        codes = (
+            subprocess.check_output(
+                [
+                    "oathtool",
+                    "-s",
+                    "30s",
+                    "-d",
+                    digits,
+                    "-b",
+                    "--totp",
+                    secret,
+                    "-w",
+                    "1",
+                ]
+            )
+            .decode()
+            .split("\n")
+        )
+        # Extract the current and next codes
+        current_code = codes[0]
+        next_code = codes[-2]
+        return current_code, next_code
+
+    def fetch_entries(self):
+        # Read each TOTP entry from the "totp/all" pass entry
+        pass_entries = (
+            subprocess.check_output(["pass", "show", "totp/all"]).decode().split("\n")
+        )
+        # Sort entries by service
+        sorted_entries = sorted(pass_entries, key=lambda x: x.split(":")[0])
+
+        # Clear existing entries in the liststore
+        self.liststore.clear()
+
+        current_time = time.time()
+        next_interval = 30 - int(current_time % 30)
+
+        # Generate and display TOTP codes
+        for entry in sorted_entries:
+            if "otpauth" not in entry:
+                continue
+
+            current_code, next_code = self.generate_totp(entry)
+            entry_info = entry[len("otpauth://totp/") :]  # Strip off "otpauth://totp/"
+            service_and_username = entry_info.split("?", 1)[
+                0
+            ]  # Select everything until "?"
+
+            # Determine service and username
+            if ":" in service_and_username:
+                service, username = service_and_username.split(":", 1)
+            else:
+                service = "-"
+                username = service_and_username
+
+            # Append the entry to the liststore
+            self.liststore.append(
+                [service, username, current_code, next_code, str(next_interval)]
+            )  # Initialize countdown as 30
+
+    def update_countdown(self):
+        current_time = time.time()
+        initial_countdown = 30 - int(current_time % 30)
+        initial_countdown = (
+            initial_countdown if initial_countdown < 30 else "Updating .."
+        )
+
+        for row in self.liststore:
+            row[4] = str(initial_countdown)
+
+        # Continue with regular countdown updates
+        self.countdown_timer = GLib.timeout_add_seconds(1, self.update_countdown)
+        return False  # Return False to run the timeout only once
+
+    def on_destroy(self, window):
+        Gtk.ApplicationWindow.do_destroy(window)
+
+
+app = TOTPApp()
+app.run(None)

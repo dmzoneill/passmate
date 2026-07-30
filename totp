@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Header for the table with right padding
+printf "%-30s\t%-30s\t%-15s\t%-15s\t%s\n" "Service" "Username" "TOTP Code" "Next Code" "Remainder"
+
+# Read each TOTP entry from the "totp/all" pass entry, sort by "Service" column, and then process
+pass show totp/all | sort -t$'\t' -k1,1 | while IFS= read -r line; do
+    # Extract the entry name
+    entry_name=$(echo "$line" | grep -oP '(?<=otpauth://totp/)[^?]+')
+
+    # Extract the secret key from the line
+    secret_key=$(echo "$line" | grep -oP '(?<=secret=)[^&]+')
+
+    # Split entry name by ":" or "/"
+    if [[ "$entry_name" == *":"* ]]; then
+        IFS=':' read -r service username <<< "$entry_name"
+    elif [[ "$entry_name" == *"/"* ]]; then
+        IFS='/' read -r service username <<< "$entry_name"
+    else
+        service=""
+        username="$entry_name"
+    fi
+
+    # If service is empty, set it to "-"
+    if [ -z "$service" ]; then
+        service="-"
+    fi
+
+    # Pad service and username to 30 characters
+    service=$(printf '%-30s' "$service")
+    username=$(printf '%-30s' "$username")
+
+    # Generate HOTP using oathtool for current time and next time
+    codes=$(oathtool -s 30s -d 6 -b --totp "$secret_key" -w 1)
+
+    # Extract the current and next codes
+    current_code=$(echo "$codes" | head -n 1)
+    next_code=$(echo "$codes" | tail -n 1)
+
+    # Calculate the remainder of epoch time divided by 30
+    remainder=$(( $(date '+%s') % 30 ))
+
+    # format topts        
+    topt1=$(printf '%-15s' "$current_code")
+    topt2=$(printf '%-15s' "$next_code")
+
+    # Print the service, username, current TOTP code, and next TOTP code in tabular format
+    printf "%s\t%s\t%s\t%s\t%s\n" "$service" "$username" "$topt1" "$topt2" "$remainder secs"
+
+done
+

@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Execute the command and capture output
+output=$(go/bin/authy-export)
+
+# Timestamp for backup
+timestamp=$(date +"%Y%m%d%H%M%S")
+
+# Backup the existing totp/all entry
+pass cp totp/all "totp/all-$timestamp"
+
+# Check if the backup is successful
+if pass show "totp/all-$timestamp" &>/dev/null; then
+    echo "Backup successful. Proceeding with modifications."
+else
+    echo "Error: Backup failed. Exiting."
+    exit 1
+fi
+
+# Retrieve the existing totp/all entry
+existing_entry=$(pass show totp/all)
+
+# Loop through each line of the output
+while IFS= read -r line; do
+    # Check if the line starts with "otpauth"
+    if [[ $line == otpauth* ]]; then
+        # Extract the secret from the line
+        secret=$(echo "$line" | grep -oP '(?<=&secret=)[^&]+')
+        
+        # Check if the secret is present in existing_entry
+        if ! grep -q "$secret" <<< "$existing_entry"; then
+            # If not present, append the entire line to existing_entry
+            existing_entry+=$'\n'"$line"
+        fi
+    fi
+done <<< "$output"
+
+# Update the totp/all entry with the modified content
+pass insert -m totp/all <<EOF
+$existing_entry
+
+EOF

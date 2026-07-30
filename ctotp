@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+
+import curses
+import time
+import subprocess
+from pprint import pprint
+
+def get_totp_entries():
+    # Read each TOTP entry from the "totp/all" pass entry
+    pass_entries = subprocess.check_output(["pass", "show", "totp/all"]).decode().split('\n')
+    # Sort entries by service
+    sorted_entries = sorted(pass_entries, key=lambda x: x.split(':')[0])
+    return sorted_entries
+
+def generate_totp(secret, digits):
+    # Generate HOTP using oathtool for current time and next time
+    codes = subprocess.check_output(["oathtool", "-s", "30s", "-d", digits, "-b", "--totp", secret, "-w", "1"]).decode().split('\n')
+    # Extract the current and next codes
+    current_code = codes[0]
+    next_code = codes[-2]
+    return current_code, next_code
+
+def extract_parameter_value(entry, parameter):
+    # Find the index of the parameter in the entry string
+    start_index = entry.find(parameter)
+    if start_index == -1:
+        return ""
+
+    # Find the index of the parameter value
+    value_start_index = start_index + len(parameter) + 1  # Adding 1 to skip '='
+    
+    # Find the end of the value (using the first '&' after the parameter)
+    end_index = entry.find('&', value_start_index)
+    if end_index == -1:
+        end_index = len(entry)
+
+    # Extract the parameter value
+    parameter_value = entry[value_start_index:end_index]
+    return parameter_value
+
+def draw_table(stdscr, entries):
+    stdscr.clear()
+    stdscr.addstr(0, 0, "Service", curses.A_BOLD)
+    stdscr.addstr(0, 20, "Username", curses.A_BOLD)
+    stdscr.addstr(0, 60, "TOTP Code", curses.A_BOLD)
+    stdscr.addstr(0, 75, "Next Code", curses.A_BOLD)
+    stdscr.addstr(0, 90, "Remaining Time", curses.A_BOLD)
+
+    row = 1
+    for entry in entries:
+        if 'otpauth' not in entry:
+            continue
+
+        # Extract the entry name
+        entry_name = entry[len("otpauth://totp/"):]  # Strip off "otpauth://totp/"
+        # Extract the part before the first "?"
+        entry_info = entry_name.split("?")[0]
+        # Split the entry_info by ":"
+        parts = entry_info.split(":", 1)
+        # If ":" exists, set service and username accordingly
+        if len(parts) > 1:
+            service = parts[0].strip()
+            username = parts[1].strip()
+        else:
+            # If ":" does not exist, set service as "-" and username as entry_info
+            service = "-"
+            username = entry_info
+
+        # Extract digits parameter
+        digits = extract_parameter_value(entry, "digits")
+
+        # Extract secret parameter
+        secret = extract_parameter_value(entry, "secret")
+
+        # Generate TOTP codes
+        current_code, next_code = generate_totp(secret, digits)
+
+        # Draw table row
+        stdscr.addstr(row, 0, service)
+        stdscr.addstr(row, 20, username)
+        stdscr.addstr(row, 60, current_code)
+        stdscr.addstr(row, 75, next_code)
+
+        row += 1
+
+def main(stdscr):
+    # Hide cursor
+    curses.curs_set(0)
+    # Draw table header
+    stdscr.addstr(0, 0, "Fetching data...", curses.A_BOLD)
+
+    # Fetch TOTP entries
+    entries = get_totp_entries()
+
+    # Draw table
+    draw_table(stdscr, entries)
+    stdscr.refresh()
+
+    # Update every second
+    while True:
+        time.sleep(1)
+        # Update remainder
+        remainder = int(time.time()) % 30
+
+        # If remainder reaches 0, redraw entire table
+        if remainder == 0:
+            # Redraw remaining time column
+            for i in range(1, len([d for d in entries if 'otpauth' in d]) + 1):
+                stdscr.addstr(i, 90, "Updating ...")
+            stdscr.refresh()
+            
+            time.sleep(1)
+            draw_table(stdscr, entries)
+            
+            # Redraw remaining time column
+            for i in range(1, len([d for d in entries if 'otpauth' in d]) + 1):
+                stdscr.addstr(i, 90, "29 secs     ")
+            stdscr.refresh()
+        else:
+            # Redraw remaining time column
+            for i in range(1, len([d for d in entries if 'otpauth' in d]) + 1):
+                stdscr.addstr(i, 90, "{} secs     ".format(30 - round(remainder)))
+            stdscr.refresh()
+
+if __name__ == "__main__":
+    curses.wrapper(main)
