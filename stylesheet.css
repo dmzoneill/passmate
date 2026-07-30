@@ -1,0 +1,282 @@
+/* Passmate — Combined Password + TOTP Extension */
+
+/* ========== Segmented Control ========== */
+
+.passmate-segment-container {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2px;
+    spacing: 2px;
+}
+
+.passmate-segment-button {
+    border-radius: 6px;
+    padding: 4px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    background-color: transparent;
+    border: none;
+    transition-duration: 200ms;
+}
+
+.passmate-segment-button:checked {
+    background-color: rgba(53, 132, 228, 0.35);
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.passmate-segment-button:hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.popup-menu-item.passmate-segment-wrapper {
+    padding: 6px 12px;
+    min-height: 0;
+}
+
+/* ========== Content Wrapper ========== */
+
+.popup-menu-item.passmate-content-wrapper {
+    padding: 0;
+    min-height: 0;
+}
+
+/* ========== Spinner ========== */
+
+.passmate-spinner-box {
+    padding: 20px;
+    spacing: 8px;
+}
+
+.passmate-spinner-icon {
+    color: #f57900;
+}
+
+@keyframes passmate-spin {
+    from { rotation-angle-z: 0; }
+    to { rotation-angle-z: 360; }
+}
+
+.passmate-spinner-label {
+    font-size: 13px;
+    color: #aaaaaa;
+}
+
+/* ========== Empty Label ========== */
+
+.passmate-empty-label {
+    font-size: 13px;
+    color: #888888;
+    padding: 12px;
+    text-align: center;
+}
+
+/* ========== Passwords Tab: Scroll & List ========== */
+
+.passmate-scrollview {
+    max-height: 500px;
+    min-width: 320px;
+    padding: 4px;
+    background-color: #1e1e1e;
+    border-radius: 6px;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+    margin: 0;
+    border: 1px solid #444;
+}
+
+.passmate-scrollbox {
+    padding: 0;
+}
+
+.passmate-menu-item {
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #eee;
+    background-color: transparent;
+    transition-duration: 200ms;
+    min-height: 24px;
+}
+
+.passmate-menu-item:hover {
+    background-color: #444;
+    border: 1px solid #666;
+}
+
+/* ========== Passwords Tab: Header ========== */
+
+.passmate-up-button {
+    width: 22px;
+    height: 22px;
+    padding: 4px;
+    margin: 0;
+    background-color: #444;
+    border-radius: 12px;
+    border: 1px solid #666;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition-duration: 200ms;
+}
+
+.passmate-up-button:hover {
+    background-color: #666;
+    border: 1px solid #aaa;
+}
+
+.passmate-header-box {
+    padding: 2px 4px;
+    spacing: 6px;
+    border-bottom: 1px solid #444;
+    font-weight: bold;
+    font-size: 13px;
+    color: #ccc;
+    min-height: 28px;
+    border-radius: 4px;
+}
+
+.passmate-header-label {
+    color: #ccc;
+    font-weight: 600;
+    font-size: 14px;
+    margin-left: 4px;
+}
+
+.popup-menu-item.passmate-header-wrapper {
+    padding: 2px 0;
+    min-height: 0;
+}
+
+.popup-menu-item.passmate-scroll-wrapper {
+    padding: 0;
+    min-height: 0;
+}
+
+/* ========== Passwords Tab: Search & Footer ========== */
+
+.passmate-search-entry {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    caret-color: white;
+    font-size: 13px;
+    color: white;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+.passmate-search-entry:focus {
+    border: 0;
+}
+
+.passmate-settings-button {
+    width: 22px;
+    height: 22px;
+    padding: 4px;
+    margin: 0;
+    background-color: #444;
+    border-radius: 12px;
+    border: 1px solid #666;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition-duration: 200ms;
+}
+
+.passmate-settings-button:hover {
+    background-color: #666;
+    border-color: #999;
+}
+
+.passmate-footer-box {
+    padding: 6px 4px;
+    spacing: 6px;
+}
+
+.passmate-search-entry-box {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin: 0;
+    spacing: 6px;
+}
+
+.passmate-search-icon {
+    color: #aaa;
+    margin-left: 6px;
+}
+
+.popup-menu-item.passmate-footer-wrapper {
+    padding: 4px 0;
+    min-height: 0;
+}
+
+/* ========== TOTP Tab ========== */
+
+.passmate-totp-countdown {
+    font-weight: bold;
+    font-size: 13px;
+    color: #f57900;
+    padding: 2px 4px;
+}
+
+.passmate-totp-header {
+    font-weight: bold;
+    font-size: 12px;
+    color: #aaaaaa;
+    padding: 0 6px;
+}
+
+.passmate-totp-cell {
+    font-size: 12px;
+    color: #eeeeee;
+    padding: 0 6px;
+}
+
+.passmate-totp-code {
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+    color: #ffffff;
+    padding: 0 6px;
+}
+
+.passmate-totp-copy-btn {
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+    margin: 0 4px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.08);
+    transition-duration: 150ms;
+}
+
+.passmate-totp-copy-btn:hover {
+    background-color: rgba(53, 132, 228, 0.35);
+    border-color: rgba(53, 132, 228, 0.6);
+}
+
+.passmate-totp-copy-btn:active {
+    background-color: rgba(53, 132, 228, 0.55);
+}
+
+.passmate-totp-row {
+    padding: 4px 12px;
+    min-height: 24px;
+    border-radius: 4px;
+    transition-duration: 150ms;
+}
+
+.passmate-totp-row:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.passmate-totp-header-row {
+    padding: 4px 12px;
+    min-height: 20px;
+}
+
+.popup-menu-item.passmate-totp-countdown-item {
+    padding: 4px 12px;
+    min-height: 0;
+}

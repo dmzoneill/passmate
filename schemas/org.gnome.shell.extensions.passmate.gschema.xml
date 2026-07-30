@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+  <schema path="/org/gnome/shell/extensions/passmate/"
+          id="org.gnome.shell.extensions.passmate">
+
+    <key name="show-menu-keybinding" type="as">
+      <default><![CDATA[['<Super>w']]]></default>
+      <summary>Keybinding to show the passmate menu</summary>
+      <description>Keyboard shortcut to open the passmate popup menu.</description>
+    </key>
+
+    <key name="clipboard-timeout" type="i">
+      <default>45</default>
+      <summary>Clipboard clear timeout</summary>
+      <description>Number of seconds after which the clipboard is automatically cleared. Set to 0 to disable.</description>
+      <range min="0" max="300"/>
+    </key>
+
+    <key name="default-tab" type="s">
+      <default>'passwords'</default>
+      <summary>Default tab</summary>
+      <description>Which tab is shown when the menu opens: "passwords" or "totp".</description>
+    </key>
+
+    <key name="totp-pass-entry" type="s">
+      <default>'totp/all'</default>
+      <summary>TOTP pass entry name</summary>
+      <description>The pass entry containing all TOTP otpauth:// URIs.</description>
+    </key>
+
+    <key name="password-store-path" type="s">
+      <default>''</default>
+      <summary>Password store path</summary>
+      <description>Custom path to the password store. Leave empty for ~/.password-store.</description>
+    </key>
+
+  </schema>
+</schemalist>

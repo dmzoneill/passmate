@@ -1,0 +1,9 @@
+{
+    "uuid": "passmate@dmzoneill.com",
+    "name": "Passmate",
+    "description": "Combined password manager and TOTP authenticator for GNU Pass. Browse passwords, copy TOTP codes, all from the GNOME Shell panel.",
+    "shell-version": ["46", "47", "48", "49", "50", "51", "52"],
+    "version": 1,
+    "settings-schema": "org.gnome.shell.extensions.passmate",
+    "url": "https://github.com/dmzoneill/passmate"
+}
