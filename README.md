@@ -78,12 +78,43 @@ This project replaces and combines two earlier projects, which are now archived:
 
 ## Requirements
 
-- GNOME Shell 46+ (for the extension)
-- [GNU Pass](https://www.passwordstore.org/) (`pass`)
-- [oathtool](https://www.nongnu.org/oath-toolkit/) (for TOTP generation)
-- Python 3 (for `ctotp` and `gtotp`)
-- PyGTK4 (for `gtotp`)
-- TOTP secrets stored in a pass entry (default `totp/all`) as `otpauth://` URIs
+### Runtime dependencies
+
+| Dependency | Required for | Install (Fedora) | Install (Ubuntu/Debian) |
+|------------|-------------|------------------|------------------------|
+| [GNU Pass](https://www.passwordstore.org/) | All | `dnf install pass` | `apt install pass` |
+| [oathtool](https://www.nongnu.org/oath-toolkit/) | TOTP generation | `dnf install oathtool` | `apt install oathtool` |
+| Python 3 | `ctotp`, `gtotp` | `dnf install python3` | `apt install python3` |
+| Python curses | `ctotp` | included with Python 3 | `apt install python3-curses` |
+| PyGObject + GTK4 | `gtotp` | `dnf install python3-gobject gtk4` | `apt install python3-gi gir1.2-gtk-4.0` |
+| GNOME Shell 46+ | Extension | included with GNOME | included with GNOME |
+| Go toolchain | `sync` (Authy migration) | `dnf install golang` | `apt install golang` |
+| [authy-export](https://github.com/alexzorin/authy) | `sync` (Authy migration) | `go install github.com/alexzorin/authy/...@latest` | same |
+
+### Quick install (Fedora)
+
+```bash
+sudo dnf install pass oathtool python3 python3-gobject gtk4
+```
+
+### Quick install (Ubuntu/Debian)
+
+```bash
+sudo apt install pass oathtool python3 python3-gi gir1.2-gtk-4.0
+```
+
+### Development dependencies (optional)
+
+```bash
+# Linting
+sudo dnf install ShellCheck        # or: apt install shellcheck
+pip install pylint                  # Python linting
+npm install                        # JS linting (eslint, stylelint, jest)
+```
+
+### Data requirement
+
+TOTP secrets stored in a GNU Pass entry (default `totp/all`) as `otpauth://` URIs.
 
 ## Install
 
