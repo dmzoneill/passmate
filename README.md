@@ -173,7 +173,7 @@ gnome-extensions prefs passmate@dmzoneill.com
 
 Store your TOTP secrets in a GNU Pass entry (default `totp/all`):
 
-```
+```text
 otpauth://totp/GitHub:username?secret=BASE32SECRET&digits=6
 otpauth://totp/Google:user@gmail.com?secret=BASE32SECRET&digits=6
 otpauth://totp/AWS:account-id?secret=BASE32SECRET&digits=8
