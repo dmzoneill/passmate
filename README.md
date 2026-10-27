@@ -1,5 +1,9 @@
 # Passmate
 
+<p align="center">
+  <img src=".github/logo.png" alt="passmate logo" width="128" />
+</p>
+
 Combined GNU Pass password manager and TOTP authenticator for GNOME Shell.
 
 Browse your password store and copy TOTP codes from a single panel indicator with tabbed navigation. Also includes standalone CLI and GUI tools for viewing TOTP codes outside GNOME Shell.
@@ -80,16 +84,16 @@ This project replaces and combines two earlier projects, which are now archived:
 
 ### Runtime dependencies
 
-| Dependency | Required for | Install (Fedora) | Install (Ubuntu/Debian) |
-|------------|-------------|------------------|------------------------|
-| [GNU Pass](https://www.passwordstore.org/) | All | `dnf install pass` | `apt install pass` |
-| [oathtool](https://www.nongnu.org/oath-toolkit/) | TOTP generation | `dnf install oathtool` | `apt install oathtool` |
-| Python 3 | `ctotp`, `gtotp` | `dnf install python3` | `apt install python3` |
-| Python curses | `ctotp` | included with Python 3 | `apt install python3-curses` |
-| PyGObject + GTK4 | `gtotp` | `dnf install python3-gobject gtk4` | `apt install python3-gi gir1.2-gtk-4.0` |
-| GNOME Shell 46+ | Extension | included with GNOME | included with GNOME |
-| Go toolchain | `sync` (Authy migration) | `dnf install golang` | `apt install golang` |
-| [authy-export](https://github.com/alexzorin/authy) | `sync` (Authy migration) | `go install github.com/alexzorin/authy/...@latest` | same |
+| Dependency                                         | Required for             | Install (Fedora)                                   | Install (Ubuntu/Debian)                 |
+| -------------------------------------------------- | ------------------------ | -------------------------------------------------- | --------------------------------------- |
+| [GNU Pass](https://www.passwordstore.org/)         | All                      | `dnf install pass`                                 | `apt install pass`                      |
+| [oathtool](https://www.nongnu.org/oath-toolkit/)   | TOTP generation          | `dnf install oathtool`                             | `apt install oathtool`                  |
+| Python 3                                           | `ctotp`, `gtotp`         | `dnf install python3`                              | `apt install python3`                   |
+| Python curses                                      | `ctotp`                  | included with Python 3                             | `apt install python3-curses`            |
+| PyGObject + GTK4                                   | `gtotp`                  | `dnf install python3-gobject gtk4`                 | `apt install python3-gi gir1.2-gtk-4.0` |
+| GNOME Shell 46+                                    | Extension                | included with GNOME                                | included with GNOME                     |
+| Go toolchain                                       | `sync` (Authy migration) | `dnf install golang`                               | `apt install golang`                    |
+| [authy-export](https://github.com/alexzorin/authy) | `sync` (Authy migration) | `go install github.com/alexzorin/authy/...@latest` | same                                    |
 
 ### Quick install (Fedora)
 
@@ -127,10 +131,12 @@ make install
 ```
 
 Then restart GNOME Shell:
+
 - **X11:** `Alt+F2`, type `r`, Enter
 - **Wayland:** Log out and log back in
 
 Enable via GNOME Extensions app or:
+
 ```bash
 gnome-extensions enable passmate@dmzoneill.com
 ```
@@ -155,13 +161,13 @@ Open preferences via the gear icon in the extension popup, or:
 gnome-extensions prefs passmate@dmzoneill.com
 ```
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| Default tab | Passwords | Which tab opens first |
-| Clipboard timeout | 45s | Auto-clear clipboard (0 = disabled) |
-| TOTP pass entry | `totp/all` | Pass entry containing otpauth:// URIs |
-| Password store path | *(empty)* | Custom path (falls back to `$PASSWORD_STORE_DIR` or `~/.password-store`) |
-| Keybinding | `Super+W` | Keyboard shortcut to open menu |
+| Setting             | Default    | Description                                                              |
+| ------------------- | ---------- | ------------------------------------------------------------------------ |
+| Default tab         | Passwords  | Which tab opens first                                                    |
+| Clipboard timeout   | 45s        | Auto-clear clipboard (0 = disabled)                                      |
+| TOTP pass entry     | `totp/all` | Pass entry containing otpauth:// URIs                                    |
+| Password store path | _(empty)_  | Custom path (falls back to `$PASSWORD_STORE_DIR` or `~/.password-store`) |
+| Keybinding          | `Super+W`  | Keyboard shortcut to open menu                                           |
 
 ## TOTP Entry Format
 
