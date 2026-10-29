@@ -4,7 +4,7 @@
           id="org.gnome.shell.extensions.passmate">
 
     <key name="show-menu-keybinding" type="as">
-      <default><![CDATA[['<Super>w']]]></default>
+      <default>['&lt;Super&gt;w']</default>
       <summary>Keybinding to show the passmate menu</summary>
       <description>Keyboard shortcut to open the passmate popup menu.</description>
     </key>

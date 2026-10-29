@@ -3,10 +3,10 @@
 
 import sys
 import os
-import subprocess
+import subprocess  # nosec B404
 import tempfile
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Add project directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -45,7 +45,7 @@ class TestCTOTP(unittest.TestCase):
     def test_oathtool_dependency(self):
         """Test that oathtool is available"""
         try:
-            result = subprocess.run(['oathtool', '--version'], 
+            result = subprocess.run(['oathtool', '--version'],   # nosec B603 B607
                                   capture_output=True, text=True, timeout=5)
             self.assertEqual(result.returncode, 0, "oathtool not available")
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -54,7 +54,7 @@ class TestCTOTP(unittest.TestCase):
     def test_pass_dependency(self):
         """Test that pass is available"""
         try:
-            result = subprocess.run(['pass', '--version'], 
+            result = subprocess.run(['pass', '--version'],   # nosec B603 B607
                                   capture_output=True, text=True, timeout=5)
             self.assertEqual(result.returncode, 0, "pass not available")
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -69,17 +69,17 @@ class TestCTOTP(unittest.TestCase):
         # This would require importing the actual functions from ctotp
         # For now, we'll just test that subprocess would be called correctly
         try:
-            subprocess.check_output(["pass", "show", "totp/all"])
+            subprocess.check_output(["pass", "show", "totp/all"])  # nosec B603 B607
         except subprocess.CalledProcessError:
             # Expected if totp/all doesn't exist, but call format is correct
             pass
     
     def test_totp_generation_format(self):
         """Test TOTP generation produces correct format"""
-        test_secret = "JBSWY3DPEHPK3PXP"  # Standard test secret
+        test_secret = "JBSWY3DPEHPK3PXP"  # Standard test secret  # nosec B105
         
         try:
-            result = subprocess.run([
+            result = subprocess.run([  # nosec B603 B607
                 'oathtool', '-s', '30s', '-d', '6', '-b', '--totp', test_secret, '-w', '1'
             ], capture_output=True, text=True, timeout=5)
             
@@ -136,7 +136,7 @@ class TestCTOTPIntegration(unittest.TestCase):
         # Create test entry
         test_data = "otpauth://totp/TestService:testuser?digits=6&secret=JBSWY3DPEHPK3PXP"
         try:
-            subprocess.run(['pass', 'insert', '-m', self.test_entry], 
+            subprocess.run(['pass', 'insert', '-m', self.test_entry],   # nosec B603 B607
                          input=test_data, text=True, check=True, 
                          capture_output=True, timeout=10)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
@@ -145,7 +145,7 @@ class TestCTOTPIntegration(unittest.TestCase):
     def tearDown(self):
         """Clean up test environment"""
         try:
-            subprocess.run(['pass', 'rm', '-f', self.test_entry], 
+            subprocess.run(['pass', 'rm', '-f', self.test_entry],   # nosec B603 B607
                          capture_output=True, timeout=5)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             pass  # Cleanup failed, but not critical
@@ -166,7 +166,7 @@ class TestCTOTPIntegration(unittest.TestCase):
             f.flush()
             
             try:
-                result = subprocess.run([sys.executable, f.name], 
+                result = subprocess.run([sys.executable, f.name],   # nosec B603 # nosemgrep
                                       capture_output=True, text=True, timeout=10)
                 self.assertEqual(result.returncode, 0, 
                                f"Script failed: {result.stderr}")
