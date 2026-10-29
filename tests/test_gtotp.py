@@ -6,7 +6,6 @@ import os
 import subprocess  # nosec B404
 import tempfile
 import unittest
-from unittest.mock import MagicMock
 
 # Add project directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
