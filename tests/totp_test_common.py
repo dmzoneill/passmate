@@ -7,7 +7,6 @@ import os
 import runpy
 import secrets
 import struct
-import subprocess  # nosec B404
 import sys
 import tempfile
 import time
@@ -120,43 +119,17 @@ class ScriptTests(unittest.TestCase):
 
 
 class IntegrationTests(unittest.TestCase):
-    """Creates and removes a temporary pass entry around each test"""
+    """Base for integration tests that rewrite scripts to use fixtures"""
 
     test_entry = ""
 
     def setUp(self):
-        """Set up test environment with test pass entry"""
+        """Set up test environment"""
         self.project_dir = PROJECT_DIR
-        if not os.access("/usr/bin/pass", os.X_OK):
-            self.skipTest("Cannot create test pass entry")
-        try:
-            subprocess.run(
-                ["/usr/bin/pass", "insert", "-m", self.test_entry],
-                input=TEST_OTPAUTH,
-                text=True,
-                check=True,
-                capture_output=True,
-                timeout=10,
-                shell=False,
-            )
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-            self.skipTest("Cannot create test pass entry")
 
     def tearDown(self):
         """Clean up test environment"""
-        if not os.access("/usr/bin/pass", os.X_OK):
-            return
-        try:
-            subprocess.run(
-                ["/usr/bin/pass", "rm", "-f", self.test_entry],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-                shell=False,
-            )
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-            pass  # Cleanup failed, but not critical
+        return
 
     def assert_test_mode(self, result):
         """Assert that a modified script ran successfully in test mode"""
@@ -171,6 +144,12 @@ class IntegrationTests(unittest.TestCase):
         """Run a copy of the script using the test entry, with start_call replaced"""
         content = read_script(script_name)
         modified_content = content.replace("totp/all", self.test_entry)
+        # Stub pass show with the in-process fixture (avoids a real password-store)
+        needle = 'subprocess.check_output(["pass", "show", "' + self.test_entry + '"])'
+        modified_content = modified_content.replace(
+            needle,
+            "(" + repr(TEST_OTPAUTH) + ').encode("utf-8")',
+        )
         modified_content = modified_content.replace(start_call, replacement)
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(modified_content)
