@@ -35,7 +35,7 @@ export class TotpTab {
         this._active = true;
         this._cancellable = new Gio.Cancellable();
         this._lastPeriod = Math.floor(Date.now() / 1000 / 30);
-        this._loadAndRender();
+        this._loadAndRender().catch(e => logError(e));
     }
 
     deactivate() {
@@ -211,7 +211,7 @@ export class TotpTab {
 
             if (period !== this._lastPeriod) {
                 this._lastPeriod = period;
-                this._refreshCodes();
+                this._refreshCodes().catch(e => logError(e));
             }
 
             return GLib.SOURCE_CONTINUE;

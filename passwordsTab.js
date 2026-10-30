@@ -47,7 +47,7 @@ export class PasswordsTab {
 
     activate() {
         this._active = true;
-        this._drawDirectory();
+        this._drawDirectory().catch(e => logError(e));
         this._focusSearch();
     }
 
@@ -81,7 +81,7 @@ export class PasswordsTab {
 
         this._headerItem = createHeaderBox(this._currentDirectory, () => {
             const upDir = resolveParentDir(this._currentDirectory);
-            this._changeDir(upDir);
+            this._changeDir(upDir).catch(e => logError(e));
         });
         this._outerBox.add_child(this._headerItem);
 
@@ -156,10 +156,10 @@ export class PasswordsTab {
 
             const row = createEntryRow(label, icon, () => {
                 if (item.isDir) {
-                    this._changeDir(`${this._currentDirectory}${item.name}/`);
+                    this._changeDir(`${this._currentDirectory}${item.name}/`).catch(e => logError(e));
                 } else {
                     const cleanRoute = sanitizePassRoute(this._currentDirectory + item.name);
-                    this._getPassword(cleanRoute);
+                    this._getPassword(cleanRoute).catch(e => logError(e));
                 }
             });
 
