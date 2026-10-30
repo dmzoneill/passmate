@@ -5,6 +5,7 @@ import io
 import os
 import runpy
 import secrets
+import shutil
 import subprocess  # nosec B404
 import sys
 import tempfile
@@ -81,13 +82,17 @@ class ScriptTests(unittest.TestCase):
 
     def test_oathtool_dependency(self):
         """Test that oathtool is available"""
+        oathtool = shutil.which("oathtool")
+        if oathtool is None:
+            self.fail("oathtool command not found or not working")
         try:
             result = subprocess.run(
-                ["oathtool", "--version"],
+                [oathtool, "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5,
                 check=False,
+                shell=False,
             )
             self.assertEqual(result.returncode, 0, "oathtool not available")
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -95,13 +100,17 @@ class ScriptTests(unittest.TestCase):
 
     def test_pass_dependency(self):
         """Test that pass is available"""
+        pass_bin = shutil.which("pass")
+        if pass_bin is None:
+            self.fail("pass command not found or not working")
         try:
             result = subprocess.run(
-                ["pass", "--version"],
+                [pass_bin, "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5,
                 check=False,
+                shell=False,
             )
             self.assertEqual(result.returncode, 0, "pass not available")
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -109,10 +118,13 @@ class ScriptTests(unittest.TestCase):
 
     def test_totp_generation_format(self):
         """Test TOTP generation produces correct format"""
+        oathtool = shutil.which("oathtool")
+        if oathtool is None:
+            self.skipTest("oathtool not available for testing")
         try:
             result = subprocess.run(
                 [
-                    "oathtool",
+                    oathtool,
                     "-s",
                     "30s",
                     "-d",
@@ -127,6 +139,7 @@ class ScriptTests(unittest.TestCase):
                 text=True,
                 timeout=5,
                 check=False,
+                shell=False,
             )
         except (subprocess.TimeoutExpired, FileNotFoundError):
             self.skipTest("oathtool not available for testing")
@@ -156,27 +169,35 @@ class IntegrationTests(unittest.TestCase):
     def setUp(self):
         """Set up test environment with test pass entry"""
         self.project_dir = PROJECT_DIR
+        pass_bin = shutil.which("pass")
+        if pass_bin is None:
+            self.skipTest("Cannot create test pass entry")
         try:
             subprocess.run(
-                ["pass", "insert", "-m", self.test_entry],
+                [pass_bin, "insert", "-m", self.test_entry],
                 input=TEST_OTPAUTH,
                 text=True,
                 check=True,
                 capture_output=True,
                 timeout=10,
+                shell=False,
             )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             self.skipTest("Cannot create test pass entry")
 
     def tearDown(self):
         """Clean up test environment"""
+        pass_bin = shutil.which("pass")
+        if pass_bin is None:
+            return
         try:
             subprocess.run(
-                ["pass", "rm", "-f", self.test_entry],
+                [pass_bin, "rm", "-f", self.test_entry],
                 capture_output=True,
                 text=True,
                 timeout=5,
                 check=False,
+                shell=False,
             )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             pass  # Cleanup failed, but not critical
