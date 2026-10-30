@@ -1,31 +1,28 @@
 """Shared helpers and base test cases for the ctotp/gtotp test suites"""
 
+import base64
 import os
+import secrets
 import subprocess  # nosec B404
 import sys
 import tempfile
 import unittest
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEST_SECRET = "JBSWY3DPEHPK3PXP"  # Standard test secret  # nosec B105
+
+
+def _random_totp_secret() -> str:
+    """Return a random base32 TOTP secret (16 chars, no padding)."""
+    return base64.b32encode(secrets.token_bytes(10)).decode("ascii")
+
+
+TEST_SECRET = _random_totp_secret()
 TEST_ENTRIES = [
     "otpauth://totp/Service:user?digits=6&secret=ABC123",
     "otpauth://totp/Test/user?digits=8&secret=XYZ789",
     "otpauth://totp/NoUser?secret=DEF456",
 ]
 TEST_OTPAUTH = f"otpauth://totp/TestService:testuser?digits=6&secret={TEST_SECRET}"
-
-
-def run_command(args, timeout, **kwargs):
-    """Run a command capturing text output, without raising on failure"""
-    return subprocess.run(  # nosec B603
-        args,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        check=False,
-        **kwargs,
-    )
 
 
 def read_script(name):
@@ -81,7 +78,13 @@ class ScriptTests(unittest.TestCase):
     def test_oathtool_dependency(self):
         """Test that oathtool is available"""
         try:
-            result = run_command(["oathtool", "--version"], timeout=5)
+            result = subprocess.run(
+                ["oathtool", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
             self.assertEqual(result.returncode, 0, "oathtool not available")
         except (subprocess.TimeoutExpired, FileNotFoundError):
             self.fail("oathtool command not found or not working")
@@ -89,27 +92,38 @@ class ScriptTests(unittest.TestCase):
     def test_pass_dependency(self):
         """Test that pass is available"""
         try:
-            result = run_command(["pass", "--version"], timeout=5)
+            result = subprocess.run(
+                ["pass", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
             self.assertEqual(result.returncode, 0, "pass not available")
         except (subprocess.TimeoutExpired, FileNotFoundError):
             self.fail("pass command not found or not working")
 
     def test_totp_generation_format(self):
         """Test TOTP generation produces correct format"""
-        args = [
-            "oathtool",
-            "-s",
-            "30s",
-            "-d",
-            "6",
-            "-b",
-            "--totp",
-            TEST_SECRET,
-            "-w",
-            "1",
-        ]
         try:
-            result = run_command(args, timeout=5)
+            result = subprocess.run(
+                [
+                    "oathtool",
+                    "-s",
+                    "30s",
+                    "-d",
+                    "6",
+                    "-b",
+                    "--totp",
+                    TEST_SECRET,
+                    "-w",
+                    "1",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
         except (subprocess.TimeoutExpired, FileNotFoundError):
             self.skipTest("oathtool not available for testing")
 
@@ -139,7 +153,7 @@ class IntegrationTests(unittest.TestCase):
         """Set up test environment with test pass entry"""
         self.project_dir = PROJECT_DIR
         try:
-            subprocess.run(  # nosec B603 B607
+            subprocess.run(
                 ["pass", "insert", "-m", self.test_entry],
                 input=TEST_OTPAUTH,
                 text=True,
@@ -153,7 +167,13 @@ class IntegrationTests(unittest.TestCase):
     def tearDown(self):
         """Clean up test environment"""
         try:
-            run_command(["pass", "rm", "-f", self.test_entry], timeout=5)
+            subprocess.run(
+                ["pass", "rm", "-f", self.test_entry],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             pass  # Cleanup failed, but not critical
 
@@ -173,7 +193,14 @@ class IntegrationTests(unittest.TestCase):
         modified_content = modified_content.replace(start_call, replacement)
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(modified_content)
+            script_path = f.name
         try:
-            return run_command([sys.executable, f.name], timeout=10)  # nosemgrep
+            return subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
         finally:
-            os.unlink(f.name)
+            os.unlink(script_path)

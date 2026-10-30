@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test suite for gtotp script"""
 
-import importlib
 import os
 import subprocess  # nosec B404
 import sys
@@ -23,11 +22,15 @@ class TestGTOTP(common.ScriptTests):
     def test_gi_imports(self):
         """Test that GTK/GI modules can be imported"""
         try:
-            gi = importlib.import_module("gi")
+            import gi
+
             gi.require_version("Gdk", "4.0")
             gi.require_version("Gtk", "4.0")
-            for name in ("Gtk", "GLib", "Gdk"):
-                importlib.import_module(f"gi.repository.{name}")
+            from gi.repository import Gdk, GLib, Gtk
+
+            self.assertIsNotNone(Gtk)
+            self.assertIsNotNone(GLib)
+            self.assertIsNotNone(Gdk)
         except ImportError as e:
             self.skipTest(f"GTK4/GI not available: {e}")
         except ValueError as e:
