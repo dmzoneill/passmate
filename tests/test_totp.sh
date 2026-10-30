@@ -76,7 +76,7 @@ test_dependencies() {
         fi
     done
     
-    if [ ${#missing_deps[@]} -eq 0 ]; then
+    if [[ ${#missing_deps[@]} -eq 0 ]]; then
         log_pass "All dependencies are available"
     else
         log_fail "Missing dependencies: ${missing_deps[*]}"
@@ -154,7 +154,7 @@ main() {
     echo "Tests passed: $TESTS_PASSED"
     echo "Tests failed: $((TESTS_RUN - TESTS_PASSED))"
     
-    if [ $TESTS_PASSED -eq $TESTS_RUN ]; then
+    if [[ $TESTS_PASSED -eq $TESTS_RUN ]]; then
         echo -e "${GREEN}All tests passed!${NC}"
         exit 0
     else

@@ -86,7 +86,7 @@ test_dependencies() {
         fi
     done
     
-    if [ ${#missing_deps[@]} -eq 0 ]; then
+    if [[ ${#missing_deps[@]} -eq 0 ]]; then
         log_pass "All dependencies are available"
     else
         log_fail "Missing dependencies: ${missing_deps[*]}"
@@ -111,7 +111,7 @@ test_backup_creation() {
         local backup_count
         backup_count=$(pass ls totp/ | grep -c "test-sync-" || echo "0")
         
-        if [ "$backup_count" -gt 0 ]; then
+        if [[ "$backup_count" -gt 0 ]]; then
             log_pass "Backup creation works"
         else
             log_fail "No backup was created"
@@ -153,7 +153,7 @@ test_duplicate_prevention() {
     original_count=$(echo "$original_content" | grep -c "JBSWY3DPEHPK3PXP" || echo "0")
     final_count=$(echo "$final_content" | grep -c "JBSWY3DPEHPK3PXP" || echo "0")
     
-    if [ "$original_count" -eq "$final_count" ]; then
+    if [[ "$original_count" -eq "$final_count" ]]; then
         log_pass "Duplicate prevention works"
     else
         log_fail "Duplicates were created (original: $original_count, final: $final_count)"
@@ -220,7 +220,7 @@ main() {
     echo "Tests passed: $TESTS_PASSED"
     echo "Tests failed: $((TESTS_RUN - TESTS_PASSED))"
     
-    if [ $TESTS_PASSED -eq $TESTS_RUN ]; then
+    if [[ $TESTS_PASSED -eq $TESTS_RUN ]]; then
         echo -e "${GREEN}All tests passed!${NC}"
         exit 0
     else

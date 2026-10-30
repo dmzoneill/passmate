@@ -41,12 +41,12 @@ test_extension_files() {
     local missing_files=()
     
     for file in "${required_files[@]}"; do
-        if [ ! -f "$PROJECT_DIR/gnome-extension/$file" ]; then
+        if [[ ! -f "$PROJECT_DIR/gnome-extension/$file" ]]; then
             missing_files+=("$file")
         fi
     done
     
-    if [ ${#missing_files[@]} -eq 0 ]; then
+    if [[ ${#missing_files[@]} -eq 0 ]]; then
         log_pass "All required extension files exist"
     else
         log_fail "Missing extension files: ${missing_files[*]}"
@@ -78,7 +78,7 @@ test_metadata_validity() {
         fi
     done
     
-    if [ ${#missing_fields[@]} -eq 0 ]; then
+    if [[ ${#missing_fields[@]} -eq 0 ]]; then
         log_pass "All required metadata fields present"
     else
         log_fail "Missing metadata fields: ${missing_fields[*]}"
@@ -134,9 +134,9 @@ test_gnome_shell_compatibility() {
         local gnome_version
         gnome_version=$(gnome-shell --version | grep -o '[0-9]\+' | head -1)
         
-        if [ -n "$gnome_version" ]; then
+        if [[ -n "$gnome_version" ]]; then
             # Check if version is supported (40+)
-            if [ "$gnome_version" -ge 40 ]; then
+            if [[ "$gnome_version" -ge 40 ]]; then
                 log_pass "GNOME Shell version $gnome_version is supported"
             else
                 log_fail "GNOME Shell version $gnome_version is too old (need 40+)"
@@ -161,7 +161,7 @@ test_extension_installation() {
     # Try to copy extension files
     if cp -r "$PROJECT_DIR/gnome-extension" "$test_extension_dir"; then
         # Check that all files were copied
-        if [ -f "$test_extension_dir/metadata.json" ] && [ -f "$test_extension_dir/extension.js" ]; then
+        if [[ -f "$test_extension_dir/metadata.json" ]] && [[ -f "$test_extension_dir/extension.js" ]]; then
             log_pass "Extension installation process works"
         else
             log_fail "Extension files not properly copied"
@@ -190,7 +190,7 @@ test_extension_dependencies() {
         fi
     done
     
-    if [ ${#missing_deps[@]} -eq 0 ]; then
+    if [[ ${#missing_deps[@]} -eq 0 ]]; then
         log_pass "All extension dependencies are available"
     else
         log_fail "Missing extension dependencies: ${missing_deps[*]}"
@@ -205,7 +205,7 @@ test_uuid_consistency() {
     local metadata_uuid
     metadata_uuid=$(python3 -c "import json; print(json.load(open('$PROJECT_DIR/gnome-extension/metadata.json'))['uuid'])")
     
-    if [ "$metadata_uuid" = "$EXTENSION_NAME" ]; then
+    if [[ "$metadata_uuid" = "$EXTENSION_NAME" ]]; then
         log_pass "Extension UUID is consistent"
     else
         log_fail "Extension UUID mismatch: expected '$EXTENSION_NAME', got '$metadata_uuid'"
@@ -233,7 +233,7 @@ test_extension_structure() {
         fi
     done
     
-    if [ ${#missing_patterns[@]} -eq 0 ]; then
+    if [[ ${#missing_patterns[@]} -eq 0 ]]; then
         log_pass "Extension has proper code structure"
     else
         log_fail "Missing code patterns: ${missing_patterns[*]}"
@@ -245,7 +245,7 @@ test_extension_structure() {
 test_current_installation() {
     log_test "Testing current installation status"
     
-    if [ -d "$EXTENSION_DIR" ]; then
+    if [[ -d "$EXTENSION_DIR" ]]; then
         if command -v gnome-extensions >/dev/null 2>&1; then
             if gnome-extensions list | grep -q "$EXTENSION_NAME"; then
                 local status
@@ -286,7 +286,7 @@ main() {
     echo "Tests passed: $TESTS_PASSED"
     echo "Tests failed: $((TESTS_RUN - TESTS_PASSED))"
     
-    if [ $TESTS_PASSED -ge $TESTS_RUN ]; then
+    if [[ $TESTS_PASSED -ge $TESTS_RUN ]]; then
         echo -e "${GREEN}All tests passed!${NC}"
         exit 0
     else
