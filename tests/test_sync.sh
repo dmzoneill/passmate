@@ -41,10 +41,13 @@ setup_test_data() {
 
 	# Create mock authy export
 	mkdir -p /tmp/go/bin
-	cat >/tmp/go/bin/authy-export <<'EOF'
+	# Random base32 TOTP secret generated per run for the new service
+	local new_secret
+	new_secret=$(head -c 10 /dev/urandom | base32)
+	cat >/tmp/go/bin/authy-export <<EOF
 #!/bin/bash
 # Mock authy export for testing
-echo "otpauth://totp/NewService:user2?digits=6&secret=GEZDGNBVGY3TQOJQ"
+echo "otpauth://totp/NewService:user2?digits=6&secret=${new_secret}"
 echo "otpauth://totp/ExistingService:user1?digits=6&secret=JBSWY3DPEHPK3PXP"
 EOF
 	chmod +x /tmp/go/bin/authy-export
