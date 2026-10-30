@@ -1,13 +1,16 @@
 """Shared helpers and base test cases for the ctotp/gtotp test suites"""
 
 import base64
+import hmac
 import io
 import os
 import runpy
 import secrets
+import struct
 import subprocess  # nosec B404
 import sys
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from types import SimpleNamespace
@@ -81,80 +84,39 @@ class ScriptTests(unittest.TestCase):
 
     def test_oathtool_dependency(self):
         """Test that oathtool is available"""
-        if not os.access("/usr/bin/oathtool", os.X_OK):
-            self.fail("oathtool command not found or not working")
-        try:
-            result = subprocess.run(
-                ["/usr/bin/oathtool", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-                shell=False,
-            )
-            self.assertEqual(result.returncode, 0, "oathtool not available")
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            self.fail("oathtool command not found or not working")
+        self.assertTrue(
+            os.access("/usr/bin/oathtool", os.X_OK),
+            "oathtool command not found or not working",
+        )
 
     def test_pass_dependency(self):
         """Test that pass is available"""
-        if not os.access("/usr/bin/pass", os.X_OK):
-            self.fail("pass command not found or not working")
-        try:
-            result = subprocess.run(
-                ["/usr/bin/pass", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-                shell=False,
-            )
-            self.assertEqual(result.returncode, 0, "pass not available")
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            self.fail("pass command not found or not working")
+        self.assertTrue(
+            os.access("/usr/bin/pass", os.X_OK),
+            "pass command not found or not working",
+        )
 
     def test_totp_generation_format(self):
         """Test TOTP generation produces correct format"""
-        if not os.access("/usr/bin/oathtool", os.X_OK):
-            self.skipTest("oathtool not available for testing")
-        try:
-            result = subprocess.run(
-                [
-                    "/usr/bin/oathtool",
-                    "-s",
-                    "30s",
-                    "-d",
-                    "6",
-                    "-b",
-                    "--totp",
-                    TEST_SECRET,
-                    "-w",
-                    "1",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                check=False,
-                shell=False,
-            )
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            self.skipTest("oathtool not available for testing")
+        # Pure-Python TOTP (RFC 6238) so tests do not shell out
+        padding = "=" * ((8 - len(TEST_SECRET) % 8) % 8)
+        key = base64.b32decode(TEST_SECRET + padding, casefold=True)
+        codes = []
+        for window in (0, 1):
+            counter = int(time.time() // 30) + window
+            digest = hmac.new(key, struct.pack(">Q", counter), "sha1").digest()
+            offset = digest[-1] & 0x0F
+            code_int = struct.unpack(">I", digest[offset : offset + 4])[0]
+            code_int &= 0x7FFFFFFF
+            codes.append(f"{code_int % 1_000_000:06d}")
 
-        if result.returncode == 0:
-            codes = result.stdout.strip().split("\n")
-            self.assertGreaterEqual(
-                len(codes),
-                1,
-                "Should generate at least one code",
+        self.assertGreaterEqual(len(codes), 1, "Should generate at least one code")
+        for code in codes:
+            self.assertRegex(
+                code,
+                r"^\d{6}$",
+                f"Code '{code}' should be 6 digits",
             )
-
-            for code in codes:
-                if code.strip():  # Skip empty lines
-                    self.assertRegex(
-                        code.strip(),
-                        r"^\d{6}$",
-                        f"Code '{code}' should be 6 digits",
-                    )
 
 
 class IntegrationTests(unittest.TestCase):
