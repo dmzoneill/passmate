@@ -5,7 +5,6 @@ import io
 import os
 import runpy
 import secrets
-import shutil
 import subprocess  # nosec B404
 import sys
 import tempfile
@@ -82,12 +81,11 @@ class ScriptTests(unittest.TestCase):
 
     def test_oathtool_dependency(self):
         """Test that oathtool is available"""
-        oathtool = shutil.which("oathtool")
-        if oathtool is None:
+        if not os.access("/usr/bin/oathtool", os.X_OK):
             self.fail("oathtool command not found or not working")
         try:
             result = subprocess.run(
-                [oathtool, "--version"],
+                ["/usr/bin/oathtool", "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -100,12 +98,11 @@ class ScriptTests(unittest.TestCase):
 
     def test_pass_dependency(self):
         """Test that pass is available"""
-        pass_bin = shutil.which("pass")
-        if pass_bin is None:
+        if not os.access("/usr/bin/pass", os.X_OK):
             self.fail("pass command not found or not working")
         try:
             result = subprocess.run(
-                [pass_bin, "--version"],
+                ["/usr/bin/pass", "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -118,13 +115,12 @@ class ScriptTests(unittest.TestCase):
 
     def test_totp_generation_format(self):
         """Test TOTP generation produces correct format"""
-        oathtool = shutil.which("oathtool")
-        if oathtool is None:
+        if not os.access("/usr/bin/oathtool", os.X_OK):
             self.skipTest("oathtool not available for testing")
         try:
             result = subprocess.run(
                 [
-                    oathtool,
+                    "/usr/bin/oathtool",
                     "-s",
                     "30s",
                     "-d",
@@ -169,12 +165,11 @@ class IntegrationTests(unittest.TestCase):
     def setUp(self):
         """Set up test environment with test pass entry"""
         self.project_dir = PROJECT_DIR
-        pass_bin = shutil.which("pass")
-        if pass_bin is None:
+        if not os.access("/usr/bin/pass", os.X_OK):
             self.skipTest("Cannot create test pass entry")
         try:
             subprocess.run(
-                [pass_bin, "insert", "-m", self.test_entry],
+                ["/usr/bin/pass", "insert", "-m", self.test_entry],
                 input=TEST_OTPAUTH,
                 text=True,
                 check=True,
@@ -187,12 +182,11 @@ class IntegrationTests(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test environment"""
-        pass_bin = shutil.which("pass")
-        if pass_bin is None:
+        if not os.access("/usr/bin/pass", os.X_OK):
             return
         try:
             subprocess.run(
-                [pass_bin, "rm", "-f", self.test_entry],
+                ["/usr/bin/pass", "rm", "-f", self.test_entry],
                 capture_output=True,
                 text=True,
                 timeout=5,
