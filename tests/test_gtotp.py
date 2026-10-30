@@ -13,6 +13,21 @@ import totp_test_common as common
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 
+try:
+    import gi as _gi
+
+    _gi.require_version("Gdk", "4.0")
+    _gi.require_version("Gtk", "4.0")
+    from gi.repository import Gdk as _Gdk
+    from gi.repository import GLib as _GLib
+    from gi.repository import Gtk as _Gtk
+
+    _GI_IMPORT_ERROR = None
+except (ImportError, ValueError) as _gi_exc:
+    _Gdk = _GLib = _Gtk = None
+    _GI_IMPORT_ERROR = _gi_exc
+
+
 class TestGTOTP(common.ScriptTests):
     """Test cases for gtotp script"""
 
@@ -21,20 +36,11 @@ class TestGTOTP(common.ScriptTests):
 
     def test_gi_imports(self):
         """Test that GTK/GI modules can be imported"""
-        try:
-            import gi
-
-            gi.require_version("Gdk", "4.0")
-            gi.require_version("Gtk", "4.0")
-            from gi.repository import Gdk, GLib, Gtk
-
-            self.assertIsNotNone(Gtk)
-            self.assertIsNotNone(GLib)
-            self.assertIsNotNone(Gdk)
-        except ImportError as e:
-            self.skipTest(f"GTK4/GI not available: {e}")
-        except ValueError as e:
-            self.skipTest(f"GTK4 version not available: {e}")
+        if _GI_IMPORT_ERROR is not None:
+            self.skipTest(f"GTK4/GI not available: {_GI_IMPORT_ERROR}")
+        self.assertIsNotNone(_Gtk)
+        self.assertIsNotNone(_GLib)
+        self.assertIsNotNone(_Gdk)
 
     def test_otpauth_parsing_logic(self):
         """Test otpauth URL parsing logic"""

@@ -1,12 +1,16 @@
 """Shared helpers and base test cases for the ctotp/gtotp test suites"""
 
 import base64
+import io
 import os
+import runpy
 import secrets
 import subprocess  # nosec B404
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
+from types import SimpleNamespace
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -194,13 +198,34 @@ class IntegrationTests(unittest.TestCase):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(modified_content)
             script_path = f.name
+        stdout_buf = io.StringIO()
+        stderr_buf = io.StringIO()
+        returncode = 0
         try:
-            return subprocess.run(
-                [sys.executable, script_path],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=False,
+            with redirect_stdout(stdout_buf), redirect_stderr(stderr_buf):
+                try:
+                    runpy.run_path(script_path, run_name="__main__")
+                except SystemExit as exc:
+                    if exc.code is None:
+                        returncode = 0
+                    elif isinstance(exc.code, int):
+                        returncode = exc.code
+                    else:
+                        returncode = 1
+                        stderr_buf.write(f"{exc.code}\n")
+                except (
+                    RuntimeError,
+                    OSError,
+                    ValueError,
+                    TypeError,
+                    ImportError,
+                ) as exc:
+                    returncode = 1
+                    stderr_buf.write(f"{exc}\n")
+            return SimpleNamespace(
+                returncode=returncode,
+                stdout=stdout_buf.getvalue(),
+                stderr=stderr_buf.getvalue(),
             )
         finally:
             os.unlink(script_path)
